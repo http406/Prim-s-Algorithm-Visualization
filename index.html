@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Prim's Algorithm Visualization</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            height: 100vh;
+            background-color: #f0f0f0;
+            overflow: hidden; /* Prevent vertical scrolling */
+        }
+
+        #generateButton {
+            margin-top: 20px;
+        }
+
+        canvas {
+            outline: none;
+        }
+    </style>
+</head>
+<body>
+    <button id="generateButton" onclick="generatePattern()">Generate</button>
+    <canvas id="canvas"></canvas>
+    <script>
+        // Vertex class to represent nodes
+        class Vertex {
+            constructor(x, y) {
+                this.x = x;
+                this.y = y;
+                this.connections = [];
+                this.visited = false;
+            }
+        }
+
+        // Edge class to represent connections between nodes
+        class Edge {
+            constructor(vertexA, vertexB, weight) {
+                this.vertexA = vertexA;
+                this.vertexB = vertexB;
+                this.weight = weight;
+            }
+        }
+
+        // Prim's Algorithm
+        function prim(vertices) {
+            const MST = [];
+            const visitedVertices = new Set();
+            
+            // Start from the first vertex
+            let currentVertex = vertices[0];
+            visitedVertices.add(currentVertex);
+
+            while (visitedVertices.size < vertices.length) {
+                let minEdge = null;
+                for (const vertex of visitedVertices) {
+                    for (const edge of vertex.connections) {
+                        if (!visitedVertices.has(edge.vertexB) && (!minEdge || edge.weight < minEdge.weight)) {
+                            minEdge = edge;
+                        }
+                    }
+                }
+                MST.push(minEdge);
+                visitedVertices.add(minEdge.vertexB);
+                currentVertex = minEdge.vertexB;
+            }
+
+            return MST;
+        }
+
+        // Drawing functions
+        function drawVertex(ctx, vertex) {
+            ctx.beginPath();
+            ctx.arc(vertex.x, vertex.y, 5, 0, Math.PI * 2);
+            ctx.fillStyle = 'red';
+            ctx.fill();
+            ctx.closePath();
+        }
+
+        function drawEdge(ctx, edge) {
+            ctx.beginPath();
+            ctx.moveTo(edge.vertexA.x, edge.vertexA.y);
+            ctx.lineTo(edge.vertexB.x, edge.vertexB.y);
+            ctx.strokeStyle = '#000';
+            ctx.stroke();
+            ctx.closePath();
+        }
+
+        // Generate random vertices within screen bounds
+        function generateRandomVertex(screenWidth, screenHeight) {
+            const margin = 20; // Margin to keep vertices away from the edges
+            const x = Math.random() * (screenWidth - 2 * margin) + margin;
+            const y = Math.random() * (screenHeight - 2 * margin) + margin;
+            return new Vertex(x, y);
+        }
+
+        // Generate random vertices and patterns
+        function generatePattern() {
+            const canvas = document.getElementById('canvas');
+            const ctx = canvas.getContext('2d');
+            const screenWidth = window.innerWidth-1;
+            const screenHeight = window.innerHeight-1;
+            
+            // Set canvas dimensions
+            canvas.width = screenWidth;
+            canvas.height = screenHeight;
+
+            const vertices = [];
+            const edges = [];
+
+            for (let i = 0; i < 10; i++) {
+                vertices.push(generateRandomVertex(screenWidth, screenHeight));
+            }
+
+            for (let i = 0; i < vertices.length; i++) {
+                for (let j = i + 1; j < vertices.length; j++) {
+                    const weight = Math.sqrt((vertices[i].x - vertices[j].x) ** 2 + (vertices[i].y - vertices[j].y) ** 2);
+                    vertices[i].connections.push(new Edge(vertices[i], vertices[j], weight));
+                    vertices[j].connections.push(new Edge(vertices[j], vertices[i], weight));
+                }
+            }
+
+            const MST = prim(vertices);
+
+            ctx.clearRect(0, 0, screenWidth, screenHeight);
+            for (const edge of MST) {
+                drawEdge(ctx, edge);
+            }
+            for (const vertex of vertices) {
+                drawVertex(ctx, vertex);
+            }
+        }
+    </script>
+</body>
+  </html>
+  
